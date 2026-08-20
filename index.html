@@ -71,6 +71,44 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--carbon);outline-
 @media (max-width:520px){.drivers{grid-template-columns:1fr}}
 .driver{display:flex;gap:7px;align-items:flex-start;font-size:13px;padding:3px 0;cursor:pointer}
 .driver input{margin:3px 0 0;accent-color:var(--ink);flex:none}
+.baseline{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--pc);padding:18px 20px 20px;margin-bottom:22px}
+.floor-tag{
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-soft);border:1px solid var(--rule);padding:2px 8px;border-radius:2px
+}
+.sub{margin-top:16px;padding-top:12px;border-top:1px solid var(--rule)}
+.sub-head{display:flex;align-items:baseline;gap:9px;margin-bottom:6px;flex-wrap:wrap}
+.sub-head h4{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em}
+.tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--pc);color:#fff;padding:2px 7px;border-radius:2px
+}
+.tag.quiet{background:transparent;color:var(--ink-soft);border:1px solid var(--rule)}
+.section-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid var(--rule)
+}
+.tri{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--rule-soft)}
+.tri:last-child{border-bottom:none}
+.tri > span{font-size:13px}
+.tri-opts{display:flex;gap:3px}
+.tri-opts label{display:flex;margin:0;cursor:pointer}
+.tri-opts input{position:absolute;opacity:0;width:0;height:0}
+.tri-opts span{
+  font-family:var(--mono);font-size:10.5px;padding:3px 7px;border:1px solid var(--rule);
+  border-radius:2px;color:var(--ink-soft);background:#fff;user-select:none
+}
+.tri-opts input:checked + span{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tri-opts input:focus-visible + span{outline:2px solid var(--carbon);outline-offset:1px}
+.followup{background:#fdfaf2;border:1px solid var(--rule);border-left:3px solid var(--resilience);padding:16px 18px 18px;margin-bottom:22px}
+.followup h3{font-size:17px;font-weight:600;margin:0 0 3px}
+.fu-table{width:100%;border-collapse:collapse;margin-top:10px}
+.fu-table th{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-soft);text-align:left;padding:5px 8px 5px 0;border-bottom:1px solid var(--rule)
+}
+.fu-table td{font-size:13.5px;padding:8px 8px 8px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.fu-blank{color:var(--rule);letter-spacing:.08em}
 .radios{display:flex;gap:14px;flex-wrap:wrap}
 .radios label{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;margin:0;cursor:pointer}
 .radios input{accent-color:var(--ink);margin:0}
@@ -100,7 +138,7 @@ button:focus-visible{outline:2px solid var(--carbon);outline-offset:2px}
 .facts span::after{content:'  ·  ';color:var(--rule)}
 .facts span:last-child::after{content:''}
 .facts + .facts{margin-top:5px}
-.program-note{margin:10px 0 0;font-size:13.5px;color:var(--ink-soft);max-width:70ch}
+.program-note{margin:10px 0 0;font-size:13.5px;color:var(--ink-soft);max-width:70ch;white-space:pre-wrap}
 
 .path{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--pc);padding:18px 20px 20px;margin-bottom:16px}
 .path-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
@@ -153,13 +191,25 @@ button:focus-visible{outline:2px solid var(--carbon);outline-offset:2px}
 
   <div class="masthead">
     <h1>Climate Strategy Path Finder</h1>
-    <p>Enter the project facts and what the client cares about. You get three paths ranked by fit, with prompts to take into the next design meeting.</p>
+    <p>Enter the project facts and what the client cares about. You get a carbon baseline plus a ranked focus path, with prompts to take into the next design meeting. Built for a twenty-minute kickoff conversation — fill the drivers in the room, out loud.</p>
   </div>
 
   <div class="cols">
 
     <!-- ============ INPUT ============ -->
     <div class="setup">
+      <div class="panel">
+        <p class="panel-title">Meeting</p>
+        <div class="field">
+          <label for="mdate">Date</label>
+          <input type="date" id="mdate">
+        </div>
+        <div class="field">
+          <label for="who">Who was in the room</label>
+          <input type="text" id="who" placeholder="PM, lead designer, climate rep">
+        </div>
+      </div>
+
       <div class="panel">
         <p class="panel-title">Project</p>
 
@@ -180,11 +230,36 @@ button:focus-visible{outline:2px solid var(--carbon);outline-offset:2px}
           <div class="radios" id="scale"></div>
         </div>
 
+        <div class="field" id="mep-field" style="display:none">
+          <label>Is major MEP being upgraded?</label>
+          <div class="radios" id="mep"></div>
+        </div>
+
         <div class="field">
           <label for="btype">Building type</label>
           <select id="btype">
             <option value="">Select one</option>
           </select>
+        </div>
+
+        <div class="field" id="care-field" style="display:none">
+          <label>Care settings <span class="hint">select all present</span></label>
+          <div class="drivers" id="cares" style="margin-top:4px"></div>
+        </div>
+
+        <div class="field" id="lab-field" style="display:none">
+          <label for="labtype">Lab type</label>
+          <select id="labtype"></select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+            <div>
+              <label for="hoods" style="font-size:12px">Fume hoods <span class="hint">count</span></label>
+              <input type="number" id="hoods" min="0" step="1" placeholder="48">
+            </div>
+            <div>
+              <label for="labpct" style="font-size:12px">Lab area <span class="hint">% of gsf</span></label>
+              <input type="number" id="labpct" min="0" max="100" step="5" placeholder="45">
+            </div>
+          </div>
         </div>
 
         <div class="field">
@@ -200,16 +275,64 @@ button:focus-visible{outline:2px solid var(--carbon);outline-offset:2px}
         </div>
 
         <div class="field">
-          <label for="program">Program notes <span class="hint">optional</span></label>
-          <textarea id="program" placeholder="Classrooms, competition gym, two wet labs, shared cafeteria"></textarea>
+          <label for="occdate">Target occupancy <span class="hint">optional</span></label>
+          <input type="date" id="occdate">
+        </div>
+
+        <div class="field">
+          <label>Client has their own sustainability standard?</label>
+          <div class="radios" id="ownstd"></div>
+          <input type="text" id="stdname" placeholder="Which one — e.g. health system finish standard" style="margin-top:8px">
+        </div>
+
+        <div class="field">
+          <label>Certification goal <span class="hint">select all that apply</span></label>
+          <div class="drivers" id="certs" style="margin-top:4px"></div>
+        </div>
+
+        <div class="field">
+          <label for="program">Project notes</label>
+          <textarea id="program" rows="5" placeholder="Program mix · phasing · site conditions · what the client has actually said about sustainability so far · anything the next person reading this needs to know"></textarea>
         </div>
         <p class="err" id="err-project"></p>
       </div>
 
       <div class="panel">
+        <p class="panel-title">Energy</p>
+        <p class="hint" style="margin:-6px 0 10px">What serves the building.</p>
+        <div class="drivers" id="fuels"></div>
+
+        <div class="field" id="plant-field" style="display:none;margin-top:14px">
+          <label>Plant ownership</label>
+          <div class="radios" id="plantown"></div>
+          <label style="margin-top:10px">Does the plant have a modernization plan?</label>
+          <div class="radios" id="plantplan"></div>
+        </div>
+
+        <div class="field" id="renew-field" style="display:none;margin-top:14px">
+          <label for="renew">Renewable procurement</label>
+          <select id="renew"></select>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Goal setting</p>
+        <div class="field">
+          <label>Has the team run a VALUES / goal setting workshop with the client?</label>
+          <div class="radios" id="values"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Site hazards</p>
+        <p class="hint" style="margin:-6px 0 10px">Team belief, not an assessment. "Not confirmed" is a valid answer and generates a follow-up.</p>
+        <div id="hazards"></div>
+      </div>
+
+      <div class="panel">
         <p class="panel-title">Systems in scope</p>
-        <p class="hint" style="margin:-6px 0 10px">What this team can actually change. Leave blank if not settled.</p>
-        <div class="drivers" id="systems"></div>
+        <p class="hint" style="margin:-6px 0 10px">What this team can change. Anything not confirmed becomes a follow-up.</p>
+        <div id="systems"></div>
       </div>
 
       <div class="panel">
@@ -255,11 +378,521 @@ button:focus-visible{outline:2px solid var(--carbon);outline-offset:2px}
    to change when the content does.
    ========================================================================= */
 
+/* Carbon is a floor, not a competitor. It applies to every project and is not
+   ranked. Only these two are ranked against each other. */
 const PATHS = {
-  carbon:     {label:'Carbon',           color:'#2d5d8a'},
   resilience: {label:'Resilience',       color:'#a8631c'},
   health:     {label:'Health + equity',  color:'#2f7a5e'}
 };
+const CARBON_COLOR = '#2d5d8a';
+
+/* Minimum carbon scope — asked on every project, regardless of type or scope. */
+const CARBON_MIN = [
+  'What carbon commitment already applies here — firm, client, or jurisdiction — and does the team know the number?',
+  'Who owns the carbon target on this project, and when does it get written into a document rather than a narrative?',
+  'What gets measured, at which phase, and against what baseline?'
+];
+
+/* Embodied and operational are decided by different people, at different phases,
+   using different levers. Which one leads depends on project type. */
+const CARBON_TRACK = {
+  newbuild:{
+    lead:'embodied',
+    note:'Structure and enclosure are decided once and cannot be revisited. Operational targets stay open into DD.',
+    embodied:[
+      'Which structural system is assumed, and has an alternate been priced against it for carbon?',
+      'What is the embodied carbon budget for structure and enclosure, and who owns it?',
+      'What mix optimization is actually available from local concrete suppliers?'
+    ],
+    operational:[
+      'What EUI target would the client put in writing by the end of SD?',
+      'Is the project all-electric, and what does the utility rate structure do to the business case?',
+      'What glazing ratio is being carried, and who decided it?'
+    ]
+  },
+  addition:{
+    lead:'embodied',
+    note:'New structure and enclosure are the new carbon. Operational performance is partly inherited from the existing plant.',
+    embodied:[
+      'Can the addition use the existing structure, or does it need its own?',
+      'What is the enclosure area added relative to floor area gained?',
+      'Is anything being demolished to make room, and has that been counted?'
+    ],
+    operational:[
+      'Does the addition connect to the existing plant, and does that plant have a decarbonization path?',
+      'Is the existing system sized for the added load, or does the whole plant get replaced?',
+      'What is the metering plan — can the addition be measured separately?'
+    ]
+  },
+  renovation:{
+    lead:'operational',
+    note:'Systems replacement on an existing building is a once-in-twenty-five-years lever.',
+    embodied:[
+      'What is being demolished that could have been kept, and what did that cost in carbon?',
+      'What is the embodied carbon of the new systems and finishes being installed?',
+      'Does any structural work get triggered, and can it be avoided?'
+    ],
+    operational:[
+      'What is the existing EUI, and has anyone actually pulled the utility bills?',
+      'Does the system replacement electrify, or does it lock in combustion for another twenty-five years?',
+      'What does the envelope allow — is there a performance ceiling no system can beat?'
+    ]
+  },
+  reuse:{
+    lead:'embodied',
+    note:'Retention is the carbon story. The number that matters is how much of the existing building survives.',
+    embodied:[
+      'How much of the existing structure is retained, and is that number in the project narrative?',
+      'What structural upgrade is triggered, and does it erase the retention benefit?',
+      'What is being removed that a different program layout would have kept?'
+    ],
+    operational:[
+      'What can this envelope realistically achieve, and is the target set against that or against a new-build benchmark?',
+      'Is full electrification possible in this shell, or is the service capacity the constraint?',
+      'Where does the existing building leak, and has anyone tested rather than assumed?'
+    ]
+  },
+  interiors:{
+    lead:'embodied',
+    note:'With base building systems fixed, finishes, furniture and churn are the carbon story.',
+    embodied:[
+      'What is the expected churn cycle, and does the design assume this gets torn out in seven years?',
+      'What existing finishes, partitions and furniture can be kept or refurbished?',
+      'Which materials carry EPDs, and which are being specified without data?'
+    ],
+    operational:[
+      'What is the lighting power density now, and what does an LED and controls swap actually get?',
+      'Which occupied areas could be daylit well enough to keep lights off, and does the layout allow it?',
+      'What plug and equipment load is being added, and who is specifying it?'
+    ]
+  },
+  study:{
+    lead:'embodied',
+    note:'This is the only phase where the carbon question can still change the project rather than the building.',
+    embodied:[
+      'Is renovation of an existing asset being compared against new build on carbon, not just on cost?',
+      'Is the carbon question being framed early enough to change the answer?',
+      'What structural approach does the site actually allow?'
+    ],
+    operational:[
+      'What performance target is going into the business case, and on what evidence?',
+      'What does the utility and grid picture look like over the life of this asset?',
+      'Is the program driving load that a different program would not?'
+    ]
+  }
+};
+
+/* When MEP is not being touched on an existing building, operational carbon
+   narrows to what can be reached without the systems. */
+const CARBON_NO_MEP = {
+  lead:'embodied',
+  note:'MEP is not being upgraded, so operational levers reduce to lighting, controls and plug loads. Embodied carbon is the priority.',
+  operational:[
+    'What is the lighting power density now, and what does an LED and controls swap actually get?',
+    'Which occupied areas could be daylit well enough to keep the lights off, and does the layout allow it?',
+    'What plug and equipment load is being added, and who is specifying it?'
+  ]
+};
+
+/* Project types where the MEP question is asked */
+const MEP_ASK = ['renovation','reuse','interiors','addition'];
+
+/* Lab sub-types -----------------------------------------------------------
+   These differ from each other more than a school differs from an office, so
+   one 'laboratory' category cannot serve them. Appears only when building
+   type is lab. */
+const LAB_TYPE = {
+  wet:     {label:'Wet chemistry / bench', oa:true},
+  bsl:     {label:'BSL-2 / BSL-3',         oa:true},
+  vivarium:{label:'Vivarium',              oa:true},
+  teaching:{label:'Teaching lab',          oa:true},
+  clean:   {label:'Cleanroom',             oa:true},
+  dry:     {label:'Dry / computational',   oa:false}
+};
+
+/* Lab prompts. {n} is replaced with the hood count and lab area when given. */
+const LAB_PROMPTS = {
+  wet:{
+    carbon:[
+      '{n}Has that hood count been tested against actual concurrent use, and who has authority to reduce it?',
+      'What ACH is assumed occupied and unoccupied, and does EHS accept setback? If not, whose risk tolerance are we designing to?',
+      'Can write-up and desk space move out of the 100% outdoor air envelope?'
+    ],
+    health:[
+      'What is the air quality at the bench rather than at the hood face — is anything measured, or is ACH compliance the only evidence anyone has?',
+      'Which benches get daylight and a view, and are those the ones assigned to grad students?',
+      'Where does glare land at hour six — on screens, on glassware, on the hood sash?',
+      'What is thermal comfort at the bench under 100% outdoor air — who ends up in the draft, and who ends up gowned and overheating?',
+      'Where does someone go at hour nine who cannot leave the experiment, and is that space inside the lab envelope or outside it?',
+      'What is the noise level at the bench with all hoods running, and has anyone measured it rather than modeled it?',
+      'Who works alone at 11pm, and is the egress route one they would choose in the dark?'
+    ],
+    resilience:[
+      'What happens to samples, animals and containment during a multi-day outage?',
+      'Is exhaust on standby power, or only supply?'
+    ]
+  },
+  bsl:{
+    carbon:[
+      'What ACH is mandated by containment versus assumed by habit, and who can distinguish the two?',
+      'Is energy recovery permitted on this exhaust stream, and has EHS confirmed it?',
+      '{n}Which hoods are containment-driven and which are convenience?'
+    ],
+    health:[
+      'Directional airflow protects the work — what protects the person? Is anything measured at the breathing zone?',
+      'Which suites have daylight, and how long does someone stay in one without seeing outside?',
+      'Where does glare fall on cabinet sashes and monitors during a long procedure?',
+      'What is the thermal load of gowning — how hot is someone after two hours in PPE at that air velocity?',
+      'How long does someone stay gowned, and where do they de-gown and actually rest?',
+      'What does the pressure regime do to noise and door force at the bench?',
+      'Who is in this suite alone, and how would anyone know if something went wrong?'
+    ],
+    resilience:[
+      'What is the containment failure scenario on loss of power, and how many minutes of margin exist?',
+      'Does standby power hold the pressure cascade, or only life safety?'
+    ]
+  },
+  vivarium:{
+    carbon:[
+      'What ACH is set by animal welfare standards versus by the previous facility, and who owns that number?',
+      'Is cage-level ventilation an option, and what does it do to room ACH?',
+      'What is the 24/7 base load, and what fraction is avoidable?'
+    ],
+    health:[
+      'What is the ammonia and allergen exposure for husbandry staff, and is it measured or assumed from the ACH rate?',
+      'Where do staff see daylight during a shift, given that animal spaces cannot have it?',
+      'What is the light quality for procedure work, and does it conflict with animal light cycles?',
+      'What is the thermal environment in cage wash, and how many hours does someone spend there?',
+      'Where do husbandry staff take breaks, and is that space outside the animal zone with daylight?',
+      'What is the noise and vibration environment for staff and for animals, and are those in conflict?',
+      'Who handles euthanasia and necropsy, and what support is designed around that work?'
+    ],
+    resilience:[
+      'What is the survival window for the colony on loss of ventilation, in minutes?',
+      'Is there a documented evacuation plan for live animals, and does the plan match the building?'
+    ]
+  },
+  teaching:{
+    carbon:[
+      '{n}Is the hood count driven by pedagogy or by peak class size, and can scheduling reduce it?',
+      'What is the actual occupied schedule, and does the system turn down between classes?',
+      'Can demonstration replace individual hood use for part of the curriculum?'
+    ],
+    health:[
+      'What is a student\'s exposure at a crowded bench, and does hood placement account for thirty people moving at once?',
+      'Does this lab have daylight, or has it been buried in the building core by default?',
+      'Can every student see the demonstration and their own work without glare?',
+      'What is thermal comfort like with a full class and every hood running?',
+      'Where does a student go who feels unwell mid-experiment, and who notices?',
+      'Can the instructor be heard at the back bench with the hoods running?'
+    ],
+    resilience:[
+      'What happens mid-class if ventilation fails, and does anyone rehearse it?',
+      'Where does a class of thirty go if the space has to be evacuated?'
+    ]
+  },
+  clean:{
+    carbon:[
+      'What ISO class is genuinely required, and is any of the space over-classified?',
+      'What is the recirculation strategy, and is fan energy being counted honestly?',
+      'Can the classified envelope be smaller than the program asks for?'
+    ],
+    health:[
+      'What is the air quality experienced by the person, not the product — has anyone asked that question at all?',
+      'Can daylight reach the classified space without compromising it, and what would that take?',
+      'What is the light quality for precision work, and where does glare land over an eight-hour shift?',
+      'What is thermal comfort like gowned, at that air velocity, for hours at a time?',
+      'How long is someone gowned without a break, and where is the de-gown and rest space?',
+      'What is the noise level from recirculation at the work surface, and has it been measured?'
+    ],
+    resilience:[
+      'What does recovery look like after a power event — hours, or days of requalification?',
+      'What is the cost of a lost batch, and does that justify the standby capacity?'
+    ]
+  },
+  dry:{
+    carbon:[
+      'What is the compute load, and is it being cooled at the rack, the room, or the building?',
+      'Is waste heat from compute recoverable for the rest of the building?',
+      'Is this space being ventilated like a wet lab out of habit?'
+    ],
+    health:[
+      'Is this space ventilated for the people or sized for the equipment heat, and does anyone notice the difference?',
+      'Where does someone look up from a screen, and what do they see?',
+      'Where does glare land on screens through the day, and does that decide where people sit?',
+      'Who sits next to the rack exhaust, and how hot is it there by mid-afternoon?',
+      'Where does someone go at hour ten who is in the middle of a run?',
+      'What is the acoustic environment next to the equipment, and who sits closest?'
+    ],
+    resilience:[
+      'What data or run time is lost in an outage, and what is that actually worth?',
+      'Is cooling on standby power, or only the compute itself?'
+    ]
+  }
+};
+
+/* What serves the building ------------------------------------------------
+   Filters carbon prompts; does not affect the ranking. */
+const FUEL = {
+  grid:    {label:'Grid electricity'},
+  gas:     {label:'Natural gas'},
+  steam:   {label:'District steam'},
+  chw:     {label:'District chilled water'},
+  network: {label:'Campus thermal network / ambient loop'},
+  geo:     {label:'Geo-exchange'}
+};
+
+/* District or campus-served options trigger the ownership and plan questions */
+const PLANT_FUELS = ['steam','chw','network'];
+
+const FUEL_PROMPTS = {
+  grid:['What is the grid carbon intensity here now, and what is it projected to be over this asset\'s life?'],
+  gas:['What is gas actually doing — space heating, process, or both — and which of those has an electric path today?'],
+  steam:[
+    'Can this building be designed electrification-ready — low-temperature coils rather than steam converters — so it does not need a gut renovation when the plant converts?',
+    'What steam is process rather than space heating — sterilization, humidification, kitchen — and does that have an electric path at all?'
+  ],
+  chw:[
+    'What supply temperature does the plant actually deliver, and does dehumidification depend on it?',
+    'What refrigerant does the central plant use, and does anyone on this project know its leakage rate?'
+  ],
+  network:[
+    'Is this building a net heat donor or a net taker on the loop across the year?',
+    'Can the systems run at low supply temperature, and what does that do to coil and distribution sizing?'
+  ],
+  geo:[
+    'How is the borefield sized, and what is the annual thermal balance — does it drift over ten years?',
+    'What happens to the borefield if the program changes and the load balance shifts?'
+  ]
+};
+
+/* Plant ownership and modernization plan */
+const PLANT_OWN = {
+  unknown: {label:'Not known'},
+  client:  {label:'Client-owned'},
+  utility: {label:'Third-party utility'}
+};
+const PLANT_PLAN = {
+  unknown: {label:'Not known'},
+  yes:     {label:'Yes'},
+  no:      {label:'No'}
+};
+const PLANT_PROMPTS = {
+  yes:['What is the plant conversion timeline, and does this building\'s system selection match the distribution temperature it is heading toward?'],
+  no:['Who at the institution owns the plant decarbonization question, and is this project the trigger to ask it?'],
+  unknown:['Does the plant have a modernization plan, and has anyone on this project actually asked? It decides the coil selection, so settle it before DD.']
+};
+const PLANT_OWN_PROMPTS = {
+  utility:['The plant is a contract, not a design decision — what does the service agreement allow this building to change?'],
+  client:['The client owns the plant, so plant and building are the same carbon conversation. Is anyone from utilities in this room?']
+};
+
+/* Renewable procurement — asked only when decarbonization or stewardship is a driver */
+const RENEW = {
+  onsite:   {label:'On-site, committed'},
+  offsite:  {label:'Off-site PPA or RECs, committed'},
+  talking:  {label:'Under discussion'},
+  none:     {label:'None'}
+};
+const RENEW_TRIGGER = ['decarb','steward'];
+const RENEW_PROMPTS = {
+  onsite:[
+    'Can the structure carry the array without an upgrade, and is that a decision now or a regret later?',
+    'Is the array actually sized against a load, or is it a symbol on a rendering?'
+  ],
+  offsite:[
+    'If off-site procurement covers the operational carbon on paper, what is still driving the load reduction conversation?',
+    'Does the procurement survive a change of client leadership, and what happens to the carbon claim if it does not?'
+  ],
+  talking:[
+    'Who decides on procurement, and by when? Roof structure decisions close in SD whether or not that answer arrives.'
+  ],
+  none:[
+    'With no procurement, every bit of the carbon target has to come from load reduction. Does the target still hold?'
+  ]
+};
+
+/* Healthcare sub-types ----------------------------------------------------
+   Multi-select: one building usually contains several. Prompts are drawn from
+   each selected type, so each set is deliberately short — two per path. */
+const CARE_TYPE = {
+  inpatient:  {label:'Inpatient / acute'},
+  emergency:  {label:'Emergency'},
+  procedural: {label:'Procedural / surgical'},
+  infusion:   {label:'Oncology / infusion'},
+  behavioral: {label:'Behavioral health'},
+  clinic:     {label:'Ambulatory / clinic'},
+  imaging:    {label:'Imaging / diagnostics'},
+  backhouse:  {label:'Back of house (sterile processing, kitchen, plant)'}
+};
+
+const CARE_PROMPTS = {
+  inpatient:{
+    health:[
+      'What does the ceiling look like from a supine position, and where does glare land from the bed?',
+      'How does night lighting let staff work without waking the room, and has anyone tested it at 3am?'
+    ],
+    carbon:[
+      'What is the reheat load on the patient floors, and is anyone looking at it?'
+    ],
+    resilience:[
+      'How many patient rooms stay habitable on standby power, and does that include cooling?'
+    ]
+  },
+  emergency:{
+    health:[
+      'What does the waiting experience look like for someone in crisis, and who can see them?',
+      'Where do staff decompress after a difficult case, and is that space real or notional?'
+    ],
+    carbon:[
+      'What is the 24/7 base load here, and how much is lighting that never turns down?'
+    ],
+    resilience:[
+      'What is the surge capacity assumption, and does the building support it — power, oxygen, triage space?'
+    ]
+  },
+  procedural:{
+    health:[
+      'How long do staff stand gowned under high illuminance, and what is thermal comfort like at hour four?',
+      'What is the acoustic environment during a procedure, and can the team hear each other?'
+    ],
+    carbon:[
+      'What air change rate is assumed unoccupied, and does anyone have authority to set it back?',
+      'What is the humidity control strategy, and what does reheat cost to hold it?'
+    ],
+    resilience:[
+      'What happens to a case in progress on loss of power, and how many minutes of margin exist?'
+    ]
+  },
+  infusion:{
+    health:[
+      'A patient sits four to six hours — which chairs have a view, and is that a layout decision or already fixed by the structural grid?',
+      'Can a patient control their own light and temperature at the chair, given that infusion often leaves people cold?',
+      'How is privacy handled without isolating someone who may be alone all afternoon?'
+    ],
+    carbon:[
+      'What is the ventilation strategy for immunocompromised patients, and does filtration drive the fan energy?'
+    ],
+    resilience:[
+      'What happens to an infusion in progress during an outage, and is that on standby power?'
+    ]
+  },
+  behavioral:{
+    health:[
+      'Where do ligature resistance and durability requirements collide with daylight, warmth and acoustics — and who decides that trade?',
+      'What does this space feel like to someone arriving involuntarily?'
+    ],
+    carbon:[
+      'Do safety requirements rule out operable windows and standard fixtures, and what does that cost in energy?'
+    ],
+    resilience:[
+      'What is the plan if the building loses power with patients who cannot be relocated?'
+    ]
+  },
+  clinic:{
+    health:[
+      'How long is a visit end to end, and where does someone wait who arrived early?',
+      'Which exam rooms have daylight, and which staff work all day in the ones that do not?'
+    ],
+    carbon:[
+      'What is the occupied schedule, and does the system actually turn down evenings and weekends?'
+    ],
+    resilience:[
+      'Is this clinic designated for surge or shelter, and has anyone confirmed that with the health system?'
+    ]
+  },
+  imaging:{
+    health:[
+      'What does an anxious patient see and hear in the moments before a scan?',
+      'Where does the tech sit for a full shift, and does that space have daylight?'
+    ],
+    carbon:[
+      'What structural and shielding mass is required, and has its embodied carbon been counted?',
+      'What is the equipment cooling load, and is it cooled independently of the rest of the building?'
+    ],
+    resilience:[
+      'What does an outage cost in equipment recovery and recalibration time?'
+    ]
+  },
+  backhouse:{
+    health:[
+      'What are the thermal and acoustic conditions in sterile processing and the kitchen, and has anyone measured them?',
+      'These are often the worst working conditions in the building — whose job is it to raise that?'
+    ],
+    carbon:[
+      'What share of total building energy is back of house, and is it in scope for this project at all?',
+      'What steam is process — sterilization, humidification, kitchen — and does it have an electric path?'
+    ],
+    resilience:[
+      'Which back-of-house functions have to keep running for the clinical floors to operate?'
+    ]
+  }
+};
+
+/* Certification systems. The old single 'cert' driver was too blunt — these
+   pull in different directions. */
+const CERTS = {
+  leed:     {label:'LEED'},
+  wellcert: {label:'WELL'},
+  lbc:      {label:'Living Building Challenge'},
+  fitwel:   {label:'Fitwel'},
+  greenglobes:{label:'Green Globes'},
+  zerocode: {label:'Zero Carbon (ILFI / other)'},
+  other:    {label:'Other / local program'},
+  undecided:{label:'Undecided'}
+};
+const CERT_PROMPTS = {
+  leed:['Which LEED version and which credits is the target actually built on, and who is tracking them?'],
+  wellcert:['WELL asks for things the design team does not control — policy, food, programming. Who on the client side owns those?'],
+  lbc:['Living Building requires Red List compliance and net positive performance. Is the client aware of what that does to procurement and schedule?'],
+  fitwel:['Fitwel scores operational and policy items as much as design. Who is answering for those?'],
+  greenglobes:['What does the Green Globes path require at each stage, and does the schedule support the assessments?'],
+  zerocode:['What boundary is the zero carbon claim drawn around — operational only, or embodied too?'],
+  other:['What does this program actually require, and has anyone read the current version rather than the last one they used?'],
+  undecided:['Certification is undecided. What is driving it — marketing, policy, or the client\'s own commitment? The answer changes which system fits.']
+};
+
+/* Site hazards ------------------------------------------------------------
+   Team belief about the site, not an assessment. Selects which resilience
+   prompts print; does not add weight. */
+const HAZARDS = {
+  flood:    {label:'Flood / storm surge'},
+  wind:     {label:'High wind / hurricane / tornado'},
+  heat:     {label:'Extreme heat'},
+  wildfire: {label:'Wildfire / smoke'},
+  seismic:  {label:'Seismic'},
+  grid:     {label:'Grid fragility / outage'}
+};
+
+/* Hazard-specific resilience prompts. Printed first when the hazard is flagged. */
+const HAZARD_PROMPTS = {
+  flood:[
+    'Where is the mechanical and electrical equipment relative to the design flood elevation, and what freeboard is being carried?',
+    'How do people get out, and how does the site drain, when the street is under water?'
+  ],
+  wind:[
+    'What is the design wind speed, and does the envelope have a tested assembly or an assumed one?',
+    'Which openings are protected, and what happens to the building if one fails?'
+  ],
+  heat:[
+    'How hot does it get inside if cooling fails in August, and how fast?',
+    'Who is least able to leave when that happens, and where do they go?'
+  ],
+  wildfire:[
+    'What filtration is carried for smoke events, and how many days can the building run sealed?',
+    'If natural ventilation is part of the energy strategy, what is the plan for the weeks it cannot be used?'
+  ],
+  seismic:[
+    'What nonstructural bracing is required, and has anyone priced it into the systems budget?',
+    'What has to be operational the day after, and does the equipment anchorage support that?'
+  ],
+  grid:[
+    'How long must the building stay habitable with no grid power, and is that number written down?',
+    'Does standby power cover cooling and ventilation, or only life safety?'
+  ]
+};
+
+
 
 /* Project type ------------------------------------------------------------
    Renovation and reuse shift weight toward health, because existing floorplates
@@ -460,7 +1093,12 @@ const SPECIFIC = {
 /* ======================= MACHINERY (content-agnostic) ==================== */
 
 const $ = id => document.getElementById(id);
-const state = {picked:new Set(), scope:new Set(), result:null};
+const state = {picked:new Set(), fuels:new Set(), cares:new Set(), certs:new Set(),
+               haz:{}, sys:{}, result:null};
+
+/* Derived: only confirmed-yes answers drive scoring and prompts. */
+const yesSet = store => new Set(Object.keys(store).filter(k => store[k] === 'yes'));
+const unknownList = store => Object.keys(store).filter(k => store[k] === 'unknown');
 
 function fillSelect(el, obj){
   Object.entries(obj).forEach(([k,v])=>{
@@ -478,20 +1116,125 @@ Object.entries(SCALE).forEach(([k,v],i)=>{
   l.innerHTML = '<input type="radio" name="scale" value="'+k+'"'+(i===0?' checked':'')+'><span>'+v.label+'</span>';
   swrap.appendChild(l);
 });
-const scaleValue = () => document.querySelector('input[name=scale]:checked').value;
-
-const sysWrap = $('systems');
-Object.entries(SYSTEMS).forEach(([k,v])=>{
+const careWrap = $('cares');
+Object.entries(CARE_TYPE).forEach(([k,v])=>{
   const l = document.createElement('label');
   l.className = 'driver';
   l.innerHTML = '<input type="checkbox" value="'+k+'"><span>'+v.label+'</span>';
-  sysWrap.appendChild(l);
+  careWrap.appendChild(l);
 });
-sysWrap.addEventListener('change', e=>{
+careWrap.addEventListener('change', e=>{
   const cb = e.target;
   if(!cb.matches('input[type=checkbox]')) return;
-  cb.checked ? state.scope.add(cb.value) : state.scope.delete(cb.value);
+  cb.checked ? state.cares.add(cb.value) : state.cares.delete(cb.value);
 });
+
+fillSelect($('labtype'), LAB_TYPE);
+function toggleLab(){
+  $('lab-field').style.display = $('btype').value === 'lab' ? 'block' : 'none';
+  $('care-field').style.display = $('btype').value === 'health' ? 'block' : 'none';
+}
+$('btype').addEventListener('change', toggleLab);
+
+const scaleValue = () => document.querySelector('input[name=scale]:checked').value;
+
+const mepWrap = $('mep');
+[['unknown','Not decided'],['yes','Yes'],['no','No']].forEach(([v,l],i)=>{
+  const el = document.createElement('label');
+  el.innerHTML = '<input type="radio" name="mep" value="'+v+'"'+(i===0?' checked':'')+'><span>'+l+'</span>';
+  mepWrap.appendChild(el);
+});
+const mepValue = () => document.querySelector('input[name=mep]:checked').value;
+function toggleMep(){
+  $('mep-field').style.display = MEP_ASK.includes($('ptype').value) ? 'block' : 'none';
+}
+$('ptype').addEventListener('change', toggleMep);
+
+const fuelWrap = $('fuels');
+Object.entries(FUEL).forEach(([k,v])=>{
+  const l = document.createElement('label');
+  l.className = 'driver';
+  l.innerHTML = '<input type="checkbox" value="'+k+'"><span>'+v.label+'</span>';
+  fuelWrap.appendChild(l);
+});
+function radios(wrapId, name, obj){
+  const w = $(wrapId);
+  Object.entries(obj).forEach(([k,v],i)=>{
+    const l = document.createElement('label');
+    l.innerHTML = '<input type="radio" name="'+name+'" value="'+k+'"'+(i===0?' checked':'')+'><span>'+v.label+'</span>';
+    w.appendChild(l);
+  });
+  return () => document.querySelector('input[name='+name+']:checked').value;
+}
+const plantOwnValue = radios('plantown','plantown', PLANT_OWN);
+const plantPlanValue = radios('plantplan','plantplan', PLANT_PLAN);
+fillSelect($('renew'), RENEW);
+
+function togglePlant(){
+  const on = Array.from(state.fuels).some(f => PLANT_FUELS.includes(f));
+  $('plant-field').style.display = on ? 'block' : 'none';
+}
+function toggleRenew(){
+  const on = RENEW_TRIGGER.some(d => state.picked.has(d));
+  $('renew-field').style.display = on ? 'block' : 'none';
+}
+fuelWrap.addEventListener('change', e=>{
+  const cb = e.target;
+  if(!cb.matches('input[type=checkbox]')) return;
+  cb.checked ? state.fuels.add(cb.value) : state.fuels.delete(cb.value);
+  togglePlant();
+});
+
+/* Tri-state controls. "Not confirmed" is the default and is a real answer —
+   it is what generates the follow-up list. */
+function triGroup(wrapId, obj, store, prefix){
+  const w = $(wrapId);
+  Object.entries(obj).forEach(([k,v])=>{
+    store[k] = 'unknown';
+    const row = document.createElement('div');
+    row.className = 'tri';
+    row.innerHTML = '<span>'+v.label+'</span><div class="tri-opts">'
+      + [['yes','Yes'],['no','No'],['unknown','?']].map(([val,lab])=>
+          '<label><input type="radio" name="'+prefix+'-'+k+'" value="'+val+'"'
+          + (val==='unknown'?' checked':'') + '><span>'+lab+'</span></label>').join('')
+      + '</div>';
+    w.appendChild(row);
+  });
+  w.addEventListener('change', e=>{
+    if(!e.target.matches('input[type=radio]')) return;
+    const key = e.target.name.slice(prefix.length + 1);
+    store[key] = e.target.value;
+    if(prefix === 'sys') { /* gate recalculates on render */ }
+  });
+}
+triGroup('hazards', HAZARDS, state.haz, 'haz');
+triGroup('systems', SYSTEMS, state.sys, 'sys');
+
+const certWrap = $('certs');
+Object.entries(CERTS).forEach(([k,v])=>{
+  const l = document.createElement('label');
+  l.className = 'driver';
+  l.innerHTML = '<input type="checkbox" value="'+k+'"><span>'+v.label+'</span>';
+  certWrap.appendChild(l);
+});
+certWrap.addEventListener('change', e=>{
+  const cb = e.target;
+  if(!cb.matches('input[type=checkbox]')) return;
+  cb.checked ? state.certs.add(cb.value) : state.certs.delete(cb.value);
+});
+
+const ownStdValue = radios('ownstd','ownstd', {
+  unknown: {label:'Not known'},
+  yes:     {label:'Yes'},
+  no:      {label:'No'}
+});
+
+const valuesValue = radios('values','values', {
+  yes:     {label:'Yes, completed'},
+  planned: {label:'Scheduled'},
+  no:      {label:'Not yet'}
+});
+
 
 const dwrap = $('drivers');
 Object.entries(DRIVERS).forEach(([k,v])=>{
@@ -510,6 +1253,7 @@ dwrap.addEventListener('change', e=>{
     return;
   }
   cb.checked ? state.picked.add(cb.value) : state.picked.delete(cb.value);
+  toggleRenew();
   clearErr('err-drivers');
 });
 
@@ -520,8 +1264,8 @@ function clearErr(id){ $(id).classList.remove('on'); }
 function score(){
   const bt = $('btype').value, z = $('zone').value;
   const pt = $('ptype').value, sc = scaleValue();
-  const totals = {carbon:0, resilience:0, health:0};
-  const reasons = {carbon:[], resilience:[], health:[]};
+  const totals = {resilience:0, health:0};
+  const reasons = {resilience:[], health:[]};
 
   const add = (w, label) => {
     for(const p in totals){
@@ -537,42 +1281,191 @@ function score(){
   state.picked.forEach(d => add(DRIVERS[d].w, DRIVERS[d].label.toLowerCase()));
 
   const sf = parseInt($('size').value || 0, 10);
-  if(sf >= 150000){ totals.carbon += 6; reasons.carbon.push('large floor area'); }
   if(sf > 0 && sf < 25000){ totals.health += 4; }
 
   /* Systems gate. Scales each path by how much of what it depends on the team
-     controls. Floored at 0.4 so an out-of-scope path is demoted, never erased. */
+     controls. Floored at 0.4 so an out-of-scope path is demoted, never erased.
+     Only confirmed-yes systems count — "not confirmed" does not gate. */
+  const scope = yesSet(state.sys);
   const gates = {};
   for(const p in totals){
-    if(state.scope.size === 0){ gates[p] = null; continue; }
+    if(scope.size === 0){ gates[p] = null; continue; }
     const need = PATH_SYSTEMS[p];
-    const have = need.filter(s => state.scope.has(s));
+    const have = need.filter(s => scope.has(s));
     const share = have.length / need.length;
     const mult = 0.4 + 0.6 * share;
     totals[p] = Math.round(totals[p] * mult);
     gates[p] = share === 1 ? null
-      : need.filter(s => !state.scope.has(s)).map(s => SYSTEMS[s].label.toLowerCase());
+      : need.filter(s => !scope.has(s)).map(s => SYSTEMS[s].label.toLowerCase());
   }
 
   return {totals, reasons, gates};
 }
 
+/* Resolves which carbon track leads and which prompts apply. */
+function carbonTrack(pt, bt){
+  const base = CARBON_TRACK[pt];
+  let lead = base.lead, note = base.note;
+  let embodied = base.embodied.slice();
+  let operational = base.operational.slice();
+
+  if(MEP_ASK.includes(pt)){
+    const m = mepValue();
+    if(m === 'no'){
+      lead = CARBON_NO_MEP.lead;
+      note = CARBON_NO_MEP.note;
+      operational = CARBON_NO_MEP.operational.slice();
+    } else if(m === 'yes' && pt !== 'reuse'){
+      lead = 'operational';
+      note = 'Systems are being replaced, so operational carbon is the live decision. Count the embodied carbon of what goes in.';
+    } else if(m === 'unknown'){
+      note = note + ' Whether MEP is in scope decides which of these two leads — settle it first.';
+    }
+  }
+
+  const spec = (SPECIFIC[bt] && SPECIFIC[bt].carbon) || [];
+  if(spec.length) (lead === 'embodied' ? embodied : operational).push(spec[0]);
+
+  /* Labs override the project-type default. Ventilation load is several times
+     an office, so operational carbon dominates lifecycle even on new build.
+     Dry / computational labs are excluded — they are not OA-dominated. */
+  if(bt === 'lab' && LAB_TYPE[$('labtype').value] && LAB_TYPE[$('labtype').value].oa){
+    lead = 'operational';
+    note = 'Ventilation-dominated: 100% outdoor air and hood count drive lifecycle carbon past embodied, even on new construction. Embodied still gets carried.';
+    const lab = labPrompts('carbon');
+    if(lab.length) operational = lab.slice(0,3);
+  }
+
+  const certq = [];
+  state.certs.forEach(c => certq.push(...(CERT_PROMPTS[c] || [])));
+  if(certq.length) operational = certq.concat(operational);
+
+  const care = carePrompts('carbon');
+  if(care.length) operational = care.concat(operational);
+
+  /* Energy supply prompts join the operational track; procurement joins whichever
+     track leads, since it is a target-setting question either way. */
+  const energy = [];
+  state.fuels.forEach(f => energy.push(...(FUEL_PROMPTS[f] || [])));
+  if(Array.from(state.fuels).some(f => PLANT_FUELS.includes(f))){
+    energy.push(...(PLANT_PROMPTS[plantPlanValue()] || []));
+    energy.push(...(PLANT_OWN_PROMPTS[plantOwnValue()] || []));
+  }
+  if(energy.length) operational = energy.concat(operational);
+
+  if(RENEW_TRIGGER.some(d => state.picked.has(d))){
+    const r = RENEW_PROMPTS[$('renew').value] || [];
+    if(r.length) operational = r.concat(operational);
+  }
+
+  return {lead, note, embodied:embodied.slice(0,3), operational:operational.slice(0,4)};
+}
+
+/* Healthcare care settings. Multi-select, so take one prompt from each setting
+   when several are chosen and more when only one is. */
+function carePrompts(path){
+  if($('btype').value !== 'health' || !state.cares.size) return [];
+  const per = state.cares.size >= 3 ? 1 : 2;
+  let out = [];
+  state.cares.forEach(c => {
+    const set = (CARE_PROMPTS[c] && CARE_PROMPTS[c][path]) || [];
+    out = out.concat(set.slice(0, per));
+  });
+  return out;
+}
+
+/* Lab prompts, with the project's own numbers substituted in where given. */
+function labPrompts(path){
+  if($('btype').value !== 'lab') return [];
+  const lt = $('labtype').value;
+  const set = (LAB_PROMPTS[lt] && LAB_PROMPTS[lt][path]) || [];
+  const hoods = parseInt($('hoods').value || 0, 10);
+  const pct   = parseInt($('labpct').value || 0, 10);
+  const gsf   = parseInt($('size').value || 0, 10);
+  const labsf = (pct && gsf) ? Math.round(gsf * pct / 100) : 0;
+  let figure = '';
+  if(hoods && labsf) figure = hoods + ' hoods across ' + labsf.toLocaleString() + ' sf of lab (' + pct + '% of the building). ';
+  else if(hoods && pct) figure = hoods + ' hoods, lab at ' + pct + '% of the building. ';
+  else if(hoods)     figure = hoods + ' hoods. ';
+  else if(pct)       figure = 'Lab at ' + pct + '% of the building. ';
+  return set.map(q => q.replace('{n}', figure));
+}
+
 function promptsFor(path, bt, pt, sc){
-  const extra = []
+  let extra = [];
+
+  /* Flagged hazards take precedence on the resilience path — a named hazard
+     beats a generic question every time. */
+  const flagged = yesSet(state.haz);
+  if(path === 'resilience' && flagged.size){
+    flagged.forEach(h => { extra = extra.concat(HAZARD_PROMPTS[h] || []); });
+    extra = extra.slice(0, flagged.size === 1 ? 2 : 3);
+  }
+
+  extra = extra
+    .concat(carePrompts(path))
+    .concat(labPrompts(path))
     .concat((SCALE_PROMPTS[sc] && SCALE_PROMPTS[sc][path]) || [])
     .concat((PROJECT_PROMPTS[pt] && PROJECT_PROMPTS[pt][path]) || [])
     .concat((SPECIFIC[bt] && SPECIFIC[bt][path]) || []);
 
   const inScope = q => {
     if(typeof q === 'string') return true;
-    if(state.scope.size === 0) return true;
-    return q.sys.some(s => state.scope.has(s));
+    const sc2 = yesSet(state.sys);
+    if(sc2.size === 0) return true;
+    return q.sys.some(s => sc2.has(s));
   };
 
   const generic = GENERIC[path];
   const kept = generic.filter(inScope);
   const pool = extra.concat(kept.length >= 2 ? kept : generic);
-  return pool.slice(0,4).map(q => typeof q === 'string' ? q : q.q);
+  return pool.slice(0,5).map(q => typeof q === 'string' ? q : q.q);
+}
+
+/* Follow-ups. Everything the team could not confirm becomes a row with an owner
+   and a date to fill in. This is what the pre-brief meeting actually produces. */
+function followUps(pt, bt){
+  const fu = [];
+  unknownList(state.haz).forEach(h =>
+    fu.push(['Hazard: ' + HAZARDS[h].label, 'Confirm exposure against FEMA NRI, USGS or the local hazard mitigation plan']));
+  unknownList(state.sys).forEach(s =>
+    fu.push(['Scope: ' + SYSTEMS[s].label, 'Confirm whether this is in the team\'s scope — it changes which paths are actionable']));
+
+  if(MEP_ASK.includes(pt) && mepValue() === 'unknown')
+    fu.push(['MEP upgrade scope', 'Settle before DD — it decides whether embodied or operational carbon leads']);
+
+  if(Array.from(state.fuels).some(f => PLANT_FUELS.includes(f))){
+    if(plantPlanValue() === 'unknown')
+      fu.push(['Central plant modernization plan', 'Ask facilities or utilities — it decides coil selection and electrification readiness']);
+    if(plantOwnValue() === 'unknown')
+      fu.push(['Plant ownership', 'Client-owned or third-party utility? Decides whether the plant is a design conversation or a contract']);
+  }
+
+  if(ownStdValue() === 'unknown')
+    fu.push(['Client sustainability standard', 'Does the client have their own standard — finish, material, energy? If one exists and governs, specifying against firm standards is work done twice']);
+  else if(ownStdValue() === 'yes' && !$('stdname').value.trim())
+    fu.push(['Client sustainability standard', 'Confirmed to exist but not named — get the current version, not the one the team used last time']);
+
+  if(!state.certs.size)
+    fu.push(['Certification goal', 'Not recorded. It sets the baseline version, the documentation load and the schedule']);
+  else if(state.certs.has('undecided'))
+    fu.push(['Certification goal', 'Undecided — settle what is driving it before the kickoff, since it changes which system fits']);
+
+  if(!$('occdate').value)
+    fu.push(['Target occupancy', 'Not recorded. It sets which decisions are still open and how much runway the follow-ups have']);
+
+  const v = valuesValue();
+  if(v === 'no')
+    fu.push(['VALUES / goal setting workshop', 'Not yet run. The drivers below are the team\'s reading, not the client\'s stated position — schedule it before the kickoff']);
+  else if(v === 'planned')
+    fu.push(['VALUES / goal setting workshop', 'Scheduled but not complete — drivers may shift. Revisit this ranking afterward']);
+
+  if(!state.fuels.size)
+    fu.push(['Energy supply', 'What serves the building has not been recorded']);
+  if(bt === 'health' && !state.cares.size)
+    fu.push(['Care settings', 'Which care settings are in this project has not been recorded']);
+
+  return fu;
 }
 
 function render(){
@@ -586,7 +1479,7 @@ function render(){
   const {totals, reasons, gates} = score();
   const max = Math.max(...Object.values(totals));
   const ranked = Object.keys(PATHS).sort((a,b)=>totals[b]-totals[a]);
-  const rankLabel = ['Lead','Support','Watch'];
+  const rankLabel = ['Primary focus','Secondary'];
 
   const name = $('pname').value.trim() || 'Untitled project';
   const sf = parseInt($('size').value || 0, 10);
@@ -600,15 +1493,76 @@ function render(){
   ].filter(Boolean).map(s=>'<span>'+s+'</span>').join('');
 
   const meta = [];
-  if(state.scope.size) meta.push('Scope: ' + Array.from(state.scope).map(s=>SYSTEMS[s].label).join(', '));
+  if(bt === 'lab'){
+    const h = parseInt($('hoods').value || 0, 10);
+    const p = parseInt($('labpct').value || 0, 10);
+    meta.push('Lab: ' + LAB_TYPE[$('labtype').value].label
+      + (h ? ', ' + h + ' hoods' : '')
+      + (p ? ', ' + p + '% lab area' : ''));
+  }
+  if(bt === 'health' && state.cares.size)
+    meta.push('Care settings: ' + Array.from(state.cares).map(c=>CARE_TYPE[c].label).join(', '));
+  if(state.fuels.size){
+    let e = 'Energy: ' + Array.from(state.fuels).map(f=>FUEL[f].label).join(', ');
+    if(Array.from(state.fuels).some(f=>PLANT_FUELS.includes(f)))
+      e += ' (' + PLANT_OWN[plantOwnValue()].label.toLowerCase() + ', plan: ' + PLANT_PLAN[plantPlanValue()].label.toLowerCase() + ')';
+    meta.push(e);
+  }
+  if(RENEW_TRIGGER.some(d => state.picked.has(d)))
+    meta.push('Renewables: ' + RENEW[$('renew').value].label);
+  const hazYes = yesSet(state.haz), sysYes = yesSet(state.sys);
+  if(hazYes.size) meta.push('Hazards: ' + Array.from(hazYes).map(h=>HAZARDS[h].label).join(', '));
+  if(sysYes.size) meta.push('Scope: ' + Array.from(sysYes).map(s=>SYSTEMS[s].label).join(', '));
   meta.push('Drivers: ' + Array.from(state.picked).map(d=>DRIVERS[d].label).join(', '));
+  const occ = $('occdate').value;
+  if(occ) meta.push('Target occupancy: ' + new Date(occ + 'T12:00').toLocaleDateString(undefined,{month:'short',year:'numeric'}));
+  if(state.certs.size) meta.push('Certification: ' + Array.from(state.certs).map(c=>CERTS[c].label).join(', '));
+  const stdv = ownStdValue(), stdn = $('stdname').value.trim();
+  meta.push('Client standard: ' + (stdv === 'yes' ? (stdn || 'yes, not named') : stdv === 'no' ? 'none' : 'not known'));
+  const who = $('who').value.trim();
+  const mdate = $('mdate').value;
+  const mline = [];
+  if(mdate) mline.push(new Date(mdate + 'T12:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}));
+  if(who) mline.push(who);
+  if(mline.length) meta.push('Pre-brief: ' + mline.join(' · '));
+  meta.push('Goal setting: ' + ({yes:'VALUES workshop completed',planned:'VALUES workshop scheduled',no:'no VALUES workshop yet'})[valuesValue()]);
   $('head-meta').innerHTML = meta.map(s=>'<span>'+s+'</span>').join('');
   const prog = $('program').value.trim();
   $('head-program').textContent = prog;
   $('head-program').style.display = prog ? 'block' : 'none';
   $('head').classList.add('on');
 
-  const out = ranked.map((p,i)=>{
+  const ct = carbonTrack(pt, bt);
+  const list = arr => '<ul class="prompts">' + arr.map((q,n)=>
+    '<li data-n="'+String(n+1).padStart(2,'0')+'">'+q+'</li>').join('') + '</ul>';
+  const track = (key, label) => {
+    const leads = ct.lead === key;
+    return '<div class="sub"><div class="sub-head"><h4>'+label+'</h4>'
+      + '<span class="tag'+(leads?'':' quiet')+'">'+(leads?'Leads here':'Also carry')+'</span>'
+      + '</div>' + list(ct[key]) + '</div>';
+  };
+  const fu = followUps(pt, bt);
+  const fuBlock = fu.length ? '<section class="followup">'
+    + '<h3>Before the kickoff</h3>'
+    + '<p class="why" style="margin-bottom:0">' + fu.length + ' item'+(fu.length===1?'':'s')
+    + ' nobody in this meeting could confirm. Assign an owner and a date now — these are what stall a whole-team kickoff.</p>'
+    + '<table class="fu-table"><tr><th style="width:34%">Item</th><th>Why it matters</th>'
+    + '<th style="width:16%">Owner</th><th style="width:14%">By</th></tr>'
+    + fu.map(([a,b]) => '<tr><td><strong>'+a+'</strong></td><td>'+b
+        + '</td><td class="fu-blank">__________</td><td class="fu-blank">________</td></tr>').join('')
+    + '</table></section>' : '';
+
+  const carbonBlock = '<section class="baseline" style="--pc:'+CARBON_COLOR+'">'
+    + '<div class="path-head"><h3>Carbon</h3>'
+    + '<span class="floor-tag">Baseline — every project</span></div>'
+    + '<p class="why">' + ct.note + '</p>'
+    + list(CARBON_MIN)
+    + track('embodied','Embodied carbon')
+    + track('operational','Operational carbon')
+    + '</section>'
+    + '<p class="section-label">Focus paths — ranked for this project</p>';
+
+  const out = fuBlock + carbonBlock + ranked.map((p,i)=>{
     const pct = Math.round(totals[p] / max * 100);
     const filled = Math.max(1, Math.round(pct / 5));
     const ticks = Array.from({length:20},(_,k)=>'<i class="tick'+(k<filled?' on':'')+'"></i>').join('');
