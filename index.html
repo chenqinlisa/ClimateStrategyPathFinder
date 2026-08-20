@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project path finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12181c;
+  --ink-soft:#4a555c;
+  --ink-faint:#7d8888;
+  --paper:#e6e8e5;
+  --card:#fbfbf9;
+  --rule:#c9cec9;
+  --rule-soft:#dde0dc;
+  --carbon:#2d5d8a;
+  --resilience:#a8631c;
+  --health:#2f7a5e;
+  --warn:#8c2f2f;
+  --sans:'Archivo',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+
+/* ---------- masthead ---------- */
+.masthead{border-bottom:1.5px solid var(--ink);padding-bottom:14px;margin-bottom:26px}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 6px
+}
+.masthead h1{font-size:30px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px;line-height:1.1}
+.masthead p{margin:0;color:var(--ink-soft);font-size:14px;max-width:60ch}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:34px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr);gap:26px}}
+
+/* ---------- form ---------- */
+.setup{position:sticky;top:24px}
+@media (max-width:860px){.setup{position:static}}
+.panel{background:var(--card);border:1px solid var(--rule);padding:18px 18px 20px}
+.panel + .panel{margin-top:14px}
+.panel-title{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 14px;padding-bottom:8px;border-bottom:1px solid var(--rule-soft)
+}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:13px;font-weight:500;margin-bottom:5px}
+.hint{font-size:12px;color:var(--ink-soft);font-weight:400}
+input[type=text],input[type=number],select,textarea{
+  width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:#fff;border:1px solid var(--rule);border-radius:2px;padding:8px 9px;
+}
+textarea{resize:vertical;min-height:62px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--carbon);outline-offset:1px;border-color:var(--carbon)}
+.drivers{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+@media (max-width:520px){.drivers{grid-template-columns:1fr}}
+.driver{display:flex;gap:7px;align-items:flex-start;font-size:13px;padding:3px 0;cursor:pointer}
+.driver input{margin:3px 0 0;accent-color:var(--ink);flex:none}
+.radios{display:flex;gap:14px;flex-wrap:wrap}
+.radios label{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:400;margin:0;cursor:pointer}
+.radios input{accent-color:var(--ink);margin:0}
+.gate{
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);
+  margin:0 0 12px;padding:6px 9px;background:#eceee9;border-left:2px solid var(--pc)
+}
+.err{color:var(--warn);font-size:12.5px;margin:6px 0 0;display:none}
+.err.on{display:block}
+#print-note{color:var(--ink-soft)}
+.actions{display:flex;gap:10px;margin-top:18px}
+button{font-family:var(--sans);font-size:14px;font-weight:500;border-radius:2px;cursor:pointer;padding:10px 16px}
+.btn-primary{background:var(--ink);color:#fff;border:1px solid var(--ink)}
+.btn-primary:hover{background:#000}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.btn-ghost:hover{border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--carbon);outline-offset:2px}
+
+/* ---------- results ---------- */
+.empty{border:1px dashed var(--rule);padding:40px 24px;text-align:center;color:var(--ink-soft);font-size:14px}
+.empty strong{display:block;color:var(--ink);font-size:16px;font-weight:500;margin-bottom:5px}
+.debrief-head{display:none;border-bottom:1.5px solid var(--ink);padding-bottom:12px;margin-bottom:22px}
+.debrief-head.on{display:block}
+.debrief-head h2{font-size:22px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+.facts{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:0}
+.facts span{white-space:nowrap}
+.facts span::after{content:'  ·  ';color:var(--rule)}
+.facts span:last-child::after{content:''}
+.program-note{margin:10px 0 0;font-size:13.5px;color:var(--ink-soft);max-width:70ch}
+
+.path{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--pc);padding:18px 20px 20px;margin-bottom:16px}
+.path-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.path h3{font-size:19px;font-weight:600;margin:0;letter-spacing:-.01em}
+.rank{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--pc);border:1px solid var(--pc);padding:2px 8px;border-radius:2px
+}
+.rank.lead{background:var(--pc);color:#fff}
+
+/* signature: scale-bar meter */
+.scale{display:flex;align-items:center;gap:10px;margin:13px 0 10px}
+.ticks{display:flex;gap:2px;flex:1}
+.tick{height:13px;flex:1;background:#e4e6e2;border-bottom:1px solid var(--rule)}
+.tick.on{background:var(--pc);border-bottom-color:var(--pc)}
+.score{font-family:var(--mono);font-size:12px;color:var(--ink-soft);flex:none;min-width:34px;text-align:right}
+.why{margin:0 0 14px;font-size:14px;color:var(--ink-soft);max-width:66ch}
+.why b{color:var(--ink);font-weight:500}
+.prompts{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule-soft)}
+.prompts li{
+  padding:9px 0 9px 24px;border-bottom:1px solid var(--rule-soft);font-size:14.5px;position:relative
+}
+.prompts li:last-child{border-bottom:none;padding-bottom:0}
+.prompts li::before{
+  content:attr(data-n);position:absolute;left:0;top:9px;
+  font-family:var(--mono);font-size:11px;color:var(--pc)
+}
+.footnote{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:24px;padding-top:10px;border-top:1px solid var(--rule)}
+
+/* ---------- print ---------- */
+@media print{
+  @page{margin:16mm}
+  body{background:#fff;font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  .masthead p,.setup,.actions,.empty{display:none !important}
+  .masthead{border-bottom:1pt solid #000;margin-bottom:16px}
+  .masthead h1{font-size:15pt}
+  .cols{display:block}
+  .path{border:1px solid #999;border-top:2.5px solid var(--pc);break-inside:avoid;background:#fff;margin-bottom:12px}
+  .prompts li{break-inside:avoid}
+}
+@media (prefers-reduced-motion:no-preference){
+  .path{animation:rise .28s ease-out both}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <p class="eyebrow">Sustainability workshop</p>
+    <h1>Project path finder</h1>
+    <p>Enter the project facts and what the client cares about. You get three paths ranked by fit, with prompts to take into the next design meeting.</p>
+  </div>
+
+  <div class="cols">
+
+    <!-- ============ INPUT ============ -->
+    <div class="setup">
+      <div class="panel">
+        <p class="panel-title">Project</p>
+
+        <div class="field">
+          <label for="pname">Project name</label>
+          <input type="text" id="pname" placeholder="Lincoln Middle School">
+        </div>
+
+        <div class="field">
+          <label for="ptype">Project type</label>
+          <select id="ptype">
+            <option value="">Select one</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Scale</label>
+          <div class="radios" id="scale"></div>
+        </div>
+
+        <div class="field">
+          <label for="btype">Building type</label>
+          <select id="btype">
+            <option value="">Select one</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="zone">Climate zone</label>
+          <select id="zone">
+            <option value="">Select one</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="size">Size <span class="hint">gross sf</span></label>
+          <input type="number" id="size" min="0" step="1000" placeholder="120000">
+        </div>
+
+        <div class="field">
+          <label for="program">Program notes <span class="hint">optional</span></label>
+          <textarea id="program" placeholder="Classrooms, competition gym, two wet labs, shared cafeteria"></textarea>
+        </div>
+        <p class="err" id="err-project"></p>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Systems in scope</p>
+        <p class="hint" style="margin:-6px 0 10px">What this team can actually change. Leave blank if not settled.</p>
+        <div class="drivers" id="systems"></div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">Client drivers</p>
+        <p class="hint" style="margin:-6px 0 10px">Pick up to four.</p>
+        <div class="drivers" id="drivers"></div>
+        <p class="err" id="err-drivers"></p>
+
+        <div class="actions">
+          <button class="btn-primary" id="go">Find paths</button>
+          <button class="btn-ghost" id="print">Print debrief</button>
+        </div>
+        <p class="err" id="print-note"></p>
+      </div>
+    </div>
+
+    <!-- ============ OUTPUT ============ -->
+    <div>
+      <div class="debrief-head" id="head">
+        <h2 id="head-title"></h2>
+        <p class="facts" id="head-facts"></p>
+        <p class="program-note" id="head-program"></p>
+      </div>
+
+      <div id="results">
+        <div class="empty" id="empty">
+          <strong>No paths yet</strong>
+          Fill in the project and pick at least one driver.
+        </div>
+      </div>
+
+      <p class="footnote" id="foot" style="display:none"></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   PLACEHOLDER CONTENT — swap this block for the real rules and prompt library.
+   Everything below the DATA section is generic machinery and should not need
+   to change when the content does.
+   ========================================================================= */
+
+const PATHS = {
+  carbon:     {label:'Carbon',           color:'#2d5d8a'},
+  resilience: {label:'Resilience',       color:'#a8631c'},
+  health:     {label:'Health + equity',  color:'#2f7a5e'}
+};
+
+/* Project type ------------------------------------------------------------
+   Renovation and reuse shift weight toward health, because existing floorplates
+   are where the daylight and air problems already live. */
+const PROJECT = {
+  newbuild:  {label:'New construction',            w:{carbon:8,  resilience:6,  health:4}},
+  addition:  {label:'Addition',                    w:{carbon:4,  resilience:6,  health:6}},
+  renovation:{label:'Renovation / modernization',  w:{carbon:6,  resilience:8,  health:14}},
+  reuse:     {label:'Adaptive reuse',              w:{carbon:14, resilience:6,  health:10}},
+  interiors: {label:'Tenant improvement / interiors', w:{carbon:2, resilience:2, health:16}},
+  study:     {label:'Study / feasibility',         w:{carbon:6,  resilience:10, health:8}}
+};
+
+/* Scale --------------------------------------------------------------------
+   A master plan sets siting, shelter networks and access exactly once, so
+   resilience and equity rise regardless of what the client says they want. */
+const SCALE = {
+  building:  {label:'Single building', w:{carbon:4,  resilience:2,  health:2}},
+  masterplan:{label:'Master plan / campus', w:{carbon:6, resilience:16, health:12}}
+};
+
+/* Systems in scope ---------------------------------------------------------
+   These do not add weight. They gate: a path the team cannot act on gets
+   demoted, and the reason is printed rather than hidden. */
+const SYSTEMS = {
+  site:      {label:'Site + landscape'},
+  structure: {label:'Structure'},
+  envelope:  {label:'Envelope'},
+  mep:       {label:'MEP systems'},
+  interiors: {label:'Interiors + FF&E'}
+};
+
+/* Which systems each path depends on to be actionable */
+const PATH_SYSTEMS = {
+  carbon:     ['structure','envelope','mep'],
+  resilience: ['site','structure','mep'],
+  health:     ['envelope','mep','interiors']
+};
+
+/* Base weight by building type ------------------------------------------- */
+const BUILDING = {
+  k12:       {label:'K-12 education',        w:{carbon:12, resilience:10, health:18}},
+  higher:    {label:'Higher education',      w:{carbon:16, resilience:8,  health:12}},
+  health:    {label:'Healthcare',            w:{carbon:10, resilience:20, health:16}},
+  lab:       {label:'Laboratory / research', w:{carbon:20, resilience:12, health:12}},
+  civic:     {label:'Civic / library',       w:{carbon:10, resilience:16, health:16}},
+  workplace: {label:'Workplace',             w:{carbon:16, resilience:8,  health:14}},
+  housing:   {label:'Housing',               w:{carbon:14, resilience:14, health:16}},
+  sports:    {label:'Sports / recreation',   w:{carbon:12, resilience:14, health:10}},
+  justice:   {label:'Justice / public safety',w:{carbon:8, resilience:20, health:12}}
+};
+
+/* Climate zone contribution ---------------------------------------------- */
+const ZONE = {
+  '1A':{label:'1A very hot, humid', w:{carbon:8,  resilience:14, health:10}, note:'cooling-dominated, humidity control'},
+  '2A':{label:'2A hot, humid',      w:{carbon:8,  resilience:12, health:10}, note:'cooling-dominated, humidity control'},
+  '2B':{label:'2B hot, dry',        w:{carbon:8,  resilience:12, health:6},  note:'cooling and water scarcity'},
+  '3A':{label:'3A warm, humid',     w:{carbon:8,  resilience:10, health:8},  note:'mixed loads, humid shoulder seasons'},
+  '3B':{label:'3B warm, dry',       w:{carbon:8,  resilience:10, health:6},  note:'cooling-led, wildfire smoke exposure'},
+  '3C':{label:'3C warm, marine',    w:{carbon:6,  resilience:8,  health:8},  note:'mild, high free-cooling potential'},
+  '4A':{label:'4A mixed, humid',    w:{carbon:10, resilience:8,  health:8},  note:'balanced heating and cooling'},
+  '4B':{label:'4B mixed, dry',      w:{carbon:10, resilience:8,  health:6},  note:'balanced loads, large diurnal swing'},
+  '4C':{label:'4C mixed, marine',   w:{carbon:8,  resilience:6,  health:8},  note:'mild, heating-led'},
+  '5A':{label:'5A cool, humid',     w:{carbon:12, resilience:8,  health:6},  note:'heating-dominated'},
+  '5B':{label:'5B cool, dry',       w:{carbon:12, resilience:8,  health:6},  note:'heating-dominated'},
+  '6A':{label:'6A cold, humid',     w:{carbon:14, resilience:10, health:6},  note:'heating-dominated, envelope critical'},
+  '6B':{label:'6B cold, dry',       w:{carbon:14, resilience:10, health:6},  note:'heating-dominated, envelope critical'},
+  '7': {label:'7 very cold',        w:{carbon:16, resilience:14, health:6},  note:'extreme heating loads, outage risk'},
+  '8': {label:'8 subarctic',        w:{carbon:18, resilience:16, health:6},  note:'extreme heating loads, outage risk'}
+};
+
+/* Client drivers ---------------------------------------------------------- */
+const DRIVERS = {
+  opcost:    {label:'Operating cost',        w:{carbon:16, resilience:4,  health:2}},
+  capcost:   {label:'Capital cost limits',   w:{carbon:6,  resilience:2,  health:4}},
+  grant:     {label:'Grant or incentive funding', w:{carbon:14, resilience:8, health:4}},
+  decarb:    {label:'Decarbonization goal',  w:{carbon:20, resilience:4,  health:2}},
+  energyind: {label:'Energy independence',   w:{carbon:10, resilience:18, health:0}},
+  climrisk:  {label:'Climate risk exposure', w:{carbon:2,  resilience:22, health:4}},
+  continuity:{label:'Operational continuity',w:{carbon:0,  resilience:20, health:4}},
+  occhealth: {label:'Occupant health',       w:{carbon:2,  resilience:4,  health:22}},
+  iaq:       {label:'Indoor air quality',    w:{carbon:4,  resilience:6,  health:18}},
+  community: {label:'Community use',         w:{carbon:0,  resilience:12, health:16}},
+  equity:    {label:'Equity commitments',    w:{carbon:2,  resilience:6,  health:20}},
+  policy:    {label:'Code or policy mandate',w:{carbon:14, resilience:10, health:8}},
+  steward:   {label:'Organizational environmental stewardship commitment', w:{carbon:16, resilience:8, health:12}},
+  cert:      {label:'Project sustainability certification goal', w:{carbon:14, resilience:8, health:14}},
+  brand:     {label:'Recruitment or brand',  w:{carbon:10, resilience:4,  health:10}}
+};
+
+/* Prompt library ---------------------------------------------------------- */
+/* Prompts may be a plain string (always relevant) or {q, sys:[...]}, in which
+   case they only print when one of those systems is in scope. */
+const GENERIC = {
+  carbon:[
+    {q:'What is the embodied carbon budget for structure and enclosure, and who owns it?', sys:['structure','envelope']},
+    {q:'Which structural system is assumed, and has an alternate been priced against it for carbon?', sys:['structure']},
+    {q:'Is the project all-electric, and what does the utility rate structure do to the business case?', sys:['mep']},
+    'What EUI target would the client put in writing by the end of SD?',
+    {q:'Where does the single largest reduction sit — structure, envelope, or systems?', sys:['structure','envelope','mep']}
+  ],
+  resilience:[
+    {q:'Which hazards does this site actually face over a fifty-year horizon?', sys:['site']},
+    'How long must the building stay habitable with no grid power?',
+    'Which spaces have to keep operating, and which are allowed to fail?',
+    {q:'Where is the mechanical and electrical equipment relative to flood and wind exposure?', sys:['mep','site']},
+    'Is there a shelter or continuity role the client has assumed but not stated?'
+  ],
+  health:[
+    'Who uses this building outside core hours, and does the plan serve them?',
+    {q:'What ventilation rate is being carried, and is it above code minimum?', sys:['mep']},
+    {q:'Which regularly occupied spaces have no daylight or view?', sys:['envelope','interiors']},
+    {q:'How do material health criteria get written into the specification, not just the narrative?', sys:['interiors','envelope']},
+    'Whose experience of this building is not represented in the room right now?'
+  ]
+};
+
+/* Prompts triggered by project type or scale ------------------------------ */
+const PROJECT_PROMPTS = {
+  renovation:{
+    carbon:['What is being demolished that could have been kept, and what did that cost in carbon?'],
+    resilience:['Which existing systems are already at end of life and will fail first?'],
+    health:['What is known about the existing air quality, and has anyone actually measured it?']
+  },
+  reuse:{
+    carbon:['How much of the existing structure is retained, and is that number in the project narrative?'],
+    resilience:['Was this building designed to a code generation that no longer matches the hazard?'],
+    health:['What legacy materials are present, and who is handling that conversation with the client?']
+  },
+  interiors:{
+    carbon:['What is the expected churn cycle, and does the design assume it gets torn out in seven years?'],
+    resilience:['What happens to this space when the base building loses power?'],
+    health:['Which finishes are being specified on habit rather than on disclosure data?']
+  },
+  study:{
+    carbon:['Is the carbon question being framed early enough to change the answer?'],
+    resilience:['What would make the client walk away from this site entirely?'],
+    health:['Who has not been asked yet, and when does asking them stop being possible?']
+  }
+};
+
+const SCALE_PROMPTS = {
+  masterplan:{
+    carbon:['Which phase carries the infrastructure cost, and does that decide the energy strategy for all of them?'],
+    resilience:['Which building on this campus is the refuge, and what does that obligate?'],
+    health:['Whose route through this campus is longest, and why?']
+  }
+};
+
+const SPECIFIC = {
+  k12:{
+    carbon:['Can the gym or field house roof carry PV without a structural upgrade?'],
+    resilience:['Is any part of this campus designated as a district emergency shelter?'],
+    health:['Which classrooms can hit daylight autonomy without glare on the teaching wall?']
+  },
+  health:{
+    carbon:['What share of the load is process and reheat, and can it be cut before it is offset?'],
+    resilience:['What is the required hours of operation on standby power, and does it cover cooling?'],
+    health:['Where do staff actually get respite, and does that space have daylight?']
+  },
+  lab:{
+    carbon:['What air change rate is assumed at night, and who has authority to lower it?'],
+    resilience:['What happens to samples and containment during a multi-day outage?'],
+    health:['How are fume hood locations affecting where people sit and how they move?']
+  },
+  higher:{
+    carbon:['Does this project connect to a campus plant, and does that plant have a decarb roadmap?'],
+    resilience:['Which buildings on campus become the refuge, and is this one of them?'],
+    health:['How does the building read to a student who has never been on this campus before?']
+  },
+  civic:{
+    carbon:['Does the jurisdiction have a procurement rule that already sets the carbon target?'],
+    resilience:['Does this building become a cooling or warming center, and is it staffed to?'],
+    health:['What does someone experience in the first thirty seconds after entering?']
+  },
+  housing:{
+    carbon:['Who pays the utility bill, and does that split kill the efficiency case?'],
+    resilience:['Can residents shelter in place safely for three days without power?'],
+    health:['Is there a unit type or floor that gets systematically worse air and light?']
+  },
+  workplace:{
+    carbon:['What is the assumed occupancy, and is the system sized for a density that never arrives?'],
+    resilience:['What is the remote-work fallback, and does that change the continuity requirement?'],
+    health:['Which desks are more than twenty-five feet from a window?']
+  },
+  sports:{
+    carbon:['What drives the load — the pool, the ice, or the air volume?'],
+    resilience:['Does this facility get used as a mass care site, and what would that require?'],
+    health:['Do spectator and participant paths give everyone the same quality of access?']
+  },
+  justice:{
+    carbon:['What is the twenty-four-hour base load, and what fraction is avoidable?'],
+    resilience:['What is the required self-sufficiency period, and is fuel storage sized for it?'],
+    health:['Where does daylight reach people who cannot leave the building?']
+  }
+};
+
+/* ======================= MACHINERY (content-agnostic) ==================== */
+
+const $ = id => document.getElementById(id);
+const state = {picked:new Set(), scope:new Set(), result:null};
+
+function fillSelect(el, obj){
+  Object.entries(obj).forEach(([k,v])=>{
+    const o = document.createElement('option');
+    o.value = k; o.textContent = v.label; el.appendChild(o);
+  });
+}
+fillSelect($('ptype'), PROJECT);
+fillSelect($('btype'), BUILDING);
+fillSelect($('zone'), ZONE);
+
+const swrap = $('scale');
+Object.entries(SCALE).forEach(([k,v],i)=>{
+  const l = document.createElement('label');
+  l.innerHTML = '<input type="radio" name="scale" value="'+k+'"'+(i===0?' checked':'')+'><span>'+v.label+'</span>';
+  swrap.appendChild(l);
+});
+const scaleValue = () => document.querySelector('input[name=scale]:checked').value;
+
+const sysWrap = $('systems');
+Object.entries(SYSTEMS).forEach(([k,v])=>{
+  const l = document.createElement('label');
+  l.className = 'driver';
+  l.innerHTML = '<input type="checkbox" value="'+k+'"><span>'+v.label+'</span>';
+  sysWrap.appendChild(l);
+});
+sysWrap.addEventListener('change', e=>{
+  const cb = e.target;
+  if(!cb.matches('input[type=checkbox]')) return;
+  cb.checked ? state.scope.add(cb.value) : state.scope.delete(cb.value);
+});
+
+const dwrap = $('drivers');
+Object.entries(DRIVERS).forEach(([k,v])=>{
+  const l = document.createElement('label');
+  l.className = 'driver';
+  l.innerHTML = '<input type="checkbox" value="'+k+'"><span>'+v.label+'</span>';
+  dwrap.appendChild(l);
+});
+
+dwrap.addEventListener('change', e=>{
+  const cb = e.target;
+  if(!cb.matches('input[type=checkbox]')) return;
+  if(cb.checked && state.picked.size >= 4){
+    cb.checked = false;
+    showErr('err-drivers','Pick up to four drivers. Uncheck one first.');
+    return;
+  }
+  cb.checked ? state.picked.add(cb.value) : state.picked.delete(cb.value);
+  clearErr('err-drivers');
+});
+
+function showErr(id,msg){ const e=$(id); e.textContent=msg; e.classList.add('on'); }
+function clearErr(id){ $(id).classList.remove('on'); }
+['btype','zone'].forEach(id=>$(id).addEventListener('change',()=>clearErr('err-project')));
+
+function score(){
+  const bt = $('btype').value, z = $('zone').value;
+  const pt = $('ptype').value, sc = scaleValue();
+  const totals = {carbon:0, resilience:0, health:0};
+  const reasons = {carbon:[], resilience:[], health:[]};
+
+  const add = (w, label) => {
+    for(const p in totals){
+      totals[p] += w[p];
+      if(w[p] >= 12) reasons[p].push(label);
+    }
+  };
+
+  add(PROJECT[pt].w, PROJECT[pt].label.toLowerCase());
+  add(SCALE[sc].w, SCALE[sc].label.toLowerCase());
+  add(BUILDING[bt].w, BUILDING[bt].label.toLowerCase());
+  add(ZONE[z].w, ZONE[z].note);
+  state.picked.forEach(d => add(DRIVERS[d].w, DRIVERS[d].label.toLowerCase()));
+
+  const sf = parseInt($('size').value || 0, 10);
+  if(sf >= 150000){ totals.carbon += 6; reasons.carbon.push('large floor area'); }
+  if(sf > 0 && sf < 25000){ totals.health += 4; }
+
+  /* Systems gate. Scales each path by how much of what it depends on the team
+     controls. Floored at 0.4 so an out-of-scope path is demoted, never erased. */
+  const gates = {};
+  for(const p in totals){
+    if(state.scope.size === 0){ gates[p] = null; continue; }
+    const need = PATH_SYSTEMS[p];
+    const have = need.filter(s => state.scope.has(s));
+    const share = have.length / need.length;
+    const mult = 0.4 + 0.6 * share;
+    totals[p] = Math.round(totals[p] * mult);
+    gates[p] = share === 1 ? null
+      : need.filter(s => !state.scope.has(s)).map(s => SYSTEMS[s].label.toLowerCase());
+  }
+
+  return {totals, reasons, gates};
+}
+
+function promptsFor(path, bt, pt, sc){
+  const extra = []
+    .concat((SCALE_PROMPTS[sc] && SCALE_PROMPTS[sc][path]) || [])
+    .concat((PROJECT_PROMPTS[pt] && PROJECT_PROMPTS[pt][path]) || [])
+    .concat((SPECIFIC[bt] && SPECIFIC[bt][path]) || []);
+
+  const inScope = q => {
+    if(typeof q === 'string') return true;
+    if(state.scope.size === 0) return true;
+    return q.sys.some(s => state.scope.has(s));
+  };
+
+  const generic = GENERIC[path];
+  const kept = generic.filter(inScope);
+  const pool = extra.concat(kept.length >= 2 ? kept : generic);
+  return pool.slice(0,4).map(q => typeof q === 'string' ? q : q.q);
+}
+
+function render(){
+  const bt = $('btype').value, z = $('zone').value;
+  const pt = $('ptype').value, sc = scaleValue();
+  let ok = true;
+  if(!pt || !bt || !z){ showErr('err-project','Select a project type, building type and climate zone.'); ok = false; }
+  if(state.picked.size === 0){ showErr('err-drivers','Pick at least one driver.'); ok = false; }
+  if(!ok) return;
+
+  const {totals, reasons, gates} = score();
+  const max = Math.max(...Object.values(totals));
+  const ranked = Object.keys(PATHS).sort((a,b)=>totals[b]-totals[a]);
+  const rankLabel = ['Lead','Support','Watch'];
+
+  const name = $('pname').value.trim() || 'Untitled project';
+  const sf = parseInt($('size').value || 0, 10);
+  $('head-title').textContent = name;
+  $('head-facts').innerHTML = [
+    PROJECT[pt].label,
+    SCALE[sc].label,
+    BUILDING[bt].label,
+    ZONE[z].label,
+    sf ? sf.toLocaleString() + ' sf' : null,
+    state.scope.size ? 'Scope: ' + Array.from(state.scope).map(s=>SYSTEMS[s].label).join(', ') : null,
+    Array.from(state.picked).map(d=>DRIVERS[d].label).join(', ')
+  ].filter(Boolean).map(s=>'<span>'+s+'</span>').join('');
+  const prog = $('program').value.trim();
+  $('head-program').textContent = prog;
+  $('head-program').style.display = prog ? 'block' : 'none';
+  $('head').classList.add('on');
+
+  const out = ranked.map((p,i)=>{
+    const pct = Math.round(totals[p] / max * 100);
+    const filled = Math.max(1, Math.round(pct / 5));
+    const ticks = Array.from({length:20},(_,k)=>'<i class="tick'+(k<filled?' on':'')+'"></i>').join('');
+    const rs = [...new Set(reasons[p])].slice(0,3);
+    const why = rs.length
+      ? 'Ranked on <b>' + rs.join('</b>, <b>') + '</b>.'
+      : 'No strong signal from the inputs given.';
+    const gate = gates[p] && gates[p].length
+      ? '<p class="gate">Scored down — ' + gates[p].join(' and ')
+        + ' out of scope. Flag it with the client rather than solve it.</p>'
+      : '';
+    const items = promptsFor(p, bt, pt, sc)
+      .map((q,n)=>'<li data-n="'+String(n+1).padStart(2,'0')+'">'+q+'</li>').join('');
+    return '<section class="path" style="--pc:'+PATHS[p].color+'">'
+      + '<div class="path-head"><h3>'+PATHS[p].label+'</h3>'
+      + '<span class="rank'+(i===0?' lead':'')+'">'+rankLabel[i]+'</span></div>'
+      + '<div class="scale"><div class="ticks">'+ticks+'</div><span class="score">'+pct+'</span></div>'
+      + '<p class="why">'+why+'</p>' + gate
+      + '<ul class="prompts">'+items+'</ul>'
+      + '</section>';
+  }).join('');
+
+  $('results').innerHTML = out;
+  const foot = $('foot');
+  foot.style.display = 'block';
+  foot.textContent = 'Generated ' + new Date().toLocaleDateString(undefined,
+    {day:'numeric', month:'short', year:'numeric'})
+    + ' — a starting point for discussion, not a recommendation.';
+  $('head').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+$('go').addEventListener('click', render);
+
+/* Printing: window.print() is blocked when this page runs inside a sandboxed
+   preview frame, so fall back to opening a standalone debrief, then to a
+   download, then to an on-screen instruction. */
+function buildStandalone(){
+  const css   = document.querySelector('style').textContent;
+  const title = $('head-title').textContent || 'Project debrief';
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>' + title + ' — debrief</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600'
+    + '&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">'
+    + '<style>' + css + '</style></head><body><div class="wrap">'
+    + $('head').outerHTML + '<div>' + $('results').innerHTML + '</div>'
+    + $('foot').outerHTML
+    + '</div><scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print()},400)}</scr' + 'ipt>'
+    + '</body></html>';
+}
+
+function printDebrief(){
+  if(!$('head').classList.contains('on')){ render(); return; }
+  clearErr('print-note');
+
+  let framed = true;
+  try { framed = window.self !== window.top; } catch(e) { framed = true; }
+
+  if(!framed){
+    try { window.print(); return; } catch(e) { /* fall through */ }
+  }
+
+  const url = URL.createObjectURL(new Blob([buildStandalone()], {type:'text/html'}));
+  let win = null;
+  try { win = window.open(url, '_blank'); } catch(e) { win = null; }
+  if(win) return;
+
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ($('head-title').textContent || 'project') + ' debrief.html';
+    document.body.appendChild(a); a.click(); a.remove();
+    showErr('print-note','Saved the debrief as a file. Open it and print to PDF.');
+  } catch(e) {
+    showErr('print-note','This preview blocks printing. Download path-finder.html, open it in a browser, and print from there.');
+  }
+}
+
+$('print').addEventListener('click', printDebrief);
+</script>
+</body>
+</html>
